@@ -1,0 +1,13 @@
+{{#if this.submitted}}
+  <span>
+    Thank you for your submission
+  </span>
+{{else}}
+  <form {{action (mut this.submitted) true on="submit"}}>
+    {{! template-lint-disable self-closing-void-elements }}
+    <input type="text" />
+    <button type="submit">
+      Valider
+    </button>
+  </form>
+{{/if}}
