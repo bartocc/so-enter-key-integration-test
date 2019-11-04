@@ -1,58 +1,57 @@
-# so-enter-key-integration-test
+### tl;dr
 
-This README outlines the details of collaborating on this Ember application.
-A short introduction of this app could easily go here.
+In an integration test, using the test helper `triggerKeyEvent` on an input inside a `<form>` does not submit the `<form>`.
 
-## Prerequisites
+### Setup
 
-You will need the following things properly installed on your computer.
+This question is based on the demo repo https://github.com/bartocc/so-enter-key-integration-test
 
-* [Git](https://git-scm.com/)
-* [Node.js](https://nodejs.org/)
-* [Yarn](https://yarnpkg.com/)
-* [Ember CLI](https://ember-cli.com/)
-* [Google Chrome](https://google.com/chrome/)
+This demo Ember.js app contains the `<XFoo>` component. When rendered, it displays a simple `<form>` with a text input and a submit button.
 
-## Installation
+The `<form>` has an action bound on its `submit` event that will set the component's `submitted` property to `true`. By default, it is `false`.
 
-* `git clone <repository-url>` this repository
-* `cd so-enter-key-integration-test`
-* `yarn install`
+The desired behaviour is to display a thank you message instead of the `<form>` after submitting it.
 
-## Running / Development
+Here is the component's template:
 
-* `ember serve`
-* Visit your app at [http://localhost:4200](http://localhost:4200).
-* Visit your tests at [http://localhost:4200/tests](http://localhost:4200/tests).
+```hbs
+{{#if this.submitted}}
+  <span>
+    Thank you for your submission
+  </span>
+{{else}}
+  <form {{action (mut this.submitted) true on="submit"}}>
+    {{! template-lint-disable self-closing-void-elements }}
+    <input type="text" />
+    <button type="submit">
+      Save
+    </button>
+  </form>
+{{/if}}
+```
 
-### Code Generators
+I've added 2 integration tests for `<XFoo>`:
 
-Make use of the many generators for code, try `ember help generate` for more details
+- one tries to send the `Enter` keydown event to the `<input>` tag with the code
 
-### Running Tests
+```js
+await render(hbs`<XFoo />`);
+await triggerKeyEvent('input', 'keydown', 'Enter');
+```
 
-* `ember test`
-* `ember test --server`
+- the other clicks the submit button with
 
-### Linting
+```js
+await render(hbs`<XFoo />`);
+await click('button');
+```
 
-* `yarn lint:hbs`
-* `yarn lint:js`
-* `yarn lint:js --fix`
+Both tests check the presence of the thank you message with:
 
-### Building
+```js
+assert.dom('span').hasText('Thank you for your submission', 'displays the thank you span');
+```
 
-* `ember build` (development)
-* `ember build --environment production` (production)
+The first test fails, the second one passes.
 
-### Deploying
-
-Specify what it takes to deploy your app.
-
-## Further Reading / Useful Links
-
-* [ember.js](https://emberjs.com/)
-* [ember-cli](https://ember-cli.com/)
-* Development Browser Extensions
-  * [ember inspector for chrome](https://chrome.google.com/webstore/detail/ember-inspector/bmdblncegkenkacieihfhpjfppoconhi)
-  * [ember inspector for firefox](https://addons.mozilla.org/en-US/firefox/addon/ember-inspector/)
+I would like to understand why using `triggerKeyEvent` does not submit the form.
